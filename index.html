@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Resume Builder</title>
+<script src="https://telegram.org/js/telegram-web-app.js?63"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--text:#172033;--muted:#667085;--accent:#2563eb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+header{background:#111827;color:#fff;padding:16px;position:sticky;top:0;z-index:5}
+header b{font-size:18px}.wrap{max-width:1000px;margin:auto;padding:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:var(--card);padding:18px;border-radius:14px;margin-bottom:16px;box-shadow:0 2px 10px #0001}
+label{display:block;font-weight:600;margin:10px 0}input,textarea,select{width:100%;padding:11px;border:1px solid #d0d5dd;border-radius:8px;margin-top:6px;font:inherit}textarea{min-height:80px}
+button{border:0;border-radius:9px;padding:11px 15px;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}.secondary{background:#667085}.danger{background:#b42318}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.preview{background:#ddd;padding:15px;overflow:auto}
+.resume{width:794px;min-height:1123px;background:white;margin:auto;padding:55px;color:#111;font-family:Arial}
+.resume h1{font-size:32px;margin:0 0 6px}.resume h2{font-size:17px;border-bottom:1px solid #333;padding-bottom:5px;margin-top:24px}.resume p{margin:6px 0;line-height:1.4}.resume .contact{color:#444}.resume .item{margin:10px 0}.resume .muted{color:#555}
+.template2 h2{border-bottom:2px solid #2563eb;color:#2563eb}.template3{font-family:Georgia,serif}.template3 h1{letter-spacing:1px}
+.small{color:var(--muted);font-size:13px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.resume{transform-origin:top left;width:794px}.preview{min-height:500px}}
+@media print{body{background:#fff}.no-print{display:none!important}.preview{padding:0}.resume{margin:0;box-shadow:none}}
+</style>
+</head>
+<body>
+<header><b>Infinite FinTech Solutions</b></header>
+<div class="wrap">
+<section class="card">
+<h1>📄 Resume Builder</h1>
+<p class="small">Fill your details, choose a template and generate a PDF. Your information stays in this browser unless you choose to send it through Telegram.</p>
+<div class="grid">
+<div><label>Full Name *<input id="name" placeholder="Your Name"></label>
+<label>Professional Title<input id="title" placeholder="e.g. BSc Agriculture Student"></label>
+<label>Mobile<input id="phone"></label>
+<label>Email<input id="email" type="email"></label>
+<label>Location<input id="location" placeholder="City, State"></label></div>
+<div><label>Template<select id="template"><option value="1">Classic</option><option value="2">Modern</option><option value="3">Elegant</option></select></label>
+<label>Career Objective<textarea id="objective" placeholder="2–4 lines about your career goal"></textarea></label>
+<label>Skills<textarea id="skills" placeholder="e.g. MS Office, Communication, Excel"></textarea></label>
+<label>Languages<textarea id="languages" placeholder="e.g. Hindi, English"></textarea></label></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Education</h2>
+<div id="education"></div>
+<button type="button" class="secondary" onclick="addEducation()">+ Add Education</button>
+</section>
+
+<section class="card">
+<h2>Experience</h2>
+<div id="experience"></div>
+<button type="button" class="secondary" onclick="addExperience()">+ Add Experience</button>
+</section>
+
+<section class="card no-print">
+<div class="actions">
+<button onclick="generatePDF()">⬇️ Generate PDF</button>
+<button class="secondary" onclick="window.print()">🖨️ Print / Save PDF</button>
+<button class="secondary" onclick="saveLocal()">💾 Save Draft</button>
+<button class="danger" onclick="clearDraft()">Clear</button>
+</div>
+<p id="msg" class="small"></p>
+</section>
+
+<section class="preview">
+<div id="resume" class="resume">
+<h1 id="rName">Your Name</h1><p id="rTitle" class="muted">Professional Title</p>
+<p id="rContact" class="contact">Mobile · Email · Location</p>
+<h2>PROFILE</h2><p id="rObjective">Your career objective will appear here.</p>
+<h2>EDUCATION</h2><div id="rEducation"></div>
+<h2>EXPERIENCE</h2><div id="rExperience"></div>
+<h2>SKILLS</h2><p id="rSkills">Your skills</p>
+<h2>LANGUAGES</h2><p id="rLanguages">Your languages</p>
+</div>
+</section>
+</div>
+<script>
+const tg=window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();document.documentElement.style.setProperty('--accent',tg.themeParams?.button_color||'#2563eb');}
+const $=id=>document.getElementById(id);
+function addEducation(v={degree:"",school:"",year:""}){const d=document.createElement("div");d.className="grid card edu";d.innerHTML=`<label>Degree/Course<input class="edud" value="${esc(v.degree)}"></label><label>Institute<input class="edus" value="${esc(v.school)}"></label><label>Year<input class="eduy" value="${esc(v.year)}"></label><div><button type="button" class="danger" onclick="this.parentElement.parentElement.remove();update()">Remove</button></div>`;$("education").appendChild(d);d.querySelectorAll("input").forEach(x=>x.oninput=update);update()}
+function addExperience(v={role:"",company:"",period:"",desc:""}){const d=document.createElement("div");d.className="card exp";d.innerHTML=`<label>Job/Role<input class="expr" value="${esc(v.role)}"></label><label>Company<input class="expc" value="${esc(v.company)}"></label><label>Period<input class="expp" value="${esc(v.period)}"></label><label>Description<textarea class="expd">${esc(v.desc)}</textarea></label><button type="button" class="danger" onclick="this.parentElement.remove();update()">Remove</button>`;$("experience").appendChild(d);d.querySelectorAll("input,textarea").forEach(x=>x.oninput=update);update()}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;")}
+function data(){return {name:$("name").value,title:$("title").value,phone:$("phone").value,email:$("email").value,location:$("location").value,objective:$("objective").value,skills:$("skills").value,languages:$("languages").value,template:$("template").value,education:[...document.querySelectorAll(".edu")].map(x=>({degree:x.querySelector(".edud").value,school:x.querySelector(".edus").value,year:x.querySelector(".eduy").value})),experience:[...document.querySelectorAll(".exp")].map(x=>({role:x.querySelector(".expr").value,company:x.querySelector(".expc").value,period:x.querySelector(".expp").value,desc:x.querySelector(".expd").value}))}}
+function update(){const d=data();$("rName").textContent=d.name||"Your Name";$("rTitle").textContent=d.title||"Professional Title";$("rContact").textContent=[d.phone,d.email,d.location].filter(Boolean).join(" · ")||"Mobile · Email · Location";$("rObjective").textContent=d.objective||"Your career objective will appear here.";$("rSkills").textContent=d.skills||"Your skills";$("rLanguages").textContent=d.languages||"Your languages";$("rEducation").innerHTML=d.education.map(x=>`<div class="item"><b>${esc(x.degree)}</b> — ${esc(x.school)} <span class="muted">${esc(x.year)}</span></div>`).join("")||"<p class='muted'>Add education.</p>";$("rExperience").innerHTML=d.experience.map(x=>`<div class="item"><b>${esc(x.role)}</b> — ${esc(x.company)} <span class="muted">${esc(x.period)}</span><p>${esc(x.desc)}</p></div>`).join("")||"<p class='muted'>Add experience.</p>";$("resume").className="resume template"+d.template}
+document.querySelectorAll("input,textarea,select").forEach(x=>x.addEventListener("input",update));
+function saveLocal(){localStorage.setItem("resumeDraft",JSON.stringify(data()));$("msg").textContent="Draft saved on this device."}
+function loadLocal(){try{const d=JSON.parse(localStorage.getItem("resumeDraft"));if(!d)return;for(const k of ["name","title","phone","email","location","objective","skills","languages","template"])if(d[k]!=null)$(k).value=d[k];$("education").innerHTML="";$("experience").innerHTML="";(d.education||[]).forEach(addEducation);(d.experience||[]).forEach(addExperience);update();$("msg").textContent="Draft restored."}catch{}}
+function clearDraft(){if(confirm("Clear this resume?")){localStorage.removeItem("resumeDraft");location.reload()}}
+async function generatePDF(){update();const el=$("resume");const name=($("name").value||"resume").replace(/[^a-z0-9-_]+/gi,"_");$("msg").textContent="Creating PDF…";try{await html2pdf().set({margin:0,filename:name+"_resume.pdf",image:{type:"jpeg",quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"px",format:[794,1123],orientation:"portrait"}}).from(el).save();$("msg").textContent="PDF created.";if(tg?.HapticFeedback)tg.HapticFeedback.notificationOccurred("success")}catch(e){$("msg").textContent="PDF generation failed. Try Print / Save PDF."}}
+addEducation();addExperience();loadLocal();update();
+</script>
+</body>
+</html>
